@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профессиональный планировщик помещений</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e, #311b92);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header h1 i {
+            font-size: 32px;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .header-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            display: flex;
+            min-height: 700px;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: rgba(30, 30, 40, 0.7);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #64b5f6;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #64b5f6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: left;
+            font-size: 16px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            background: rgba(41, 98, 255, 0.2);
+            border-color: rgba(41, 98, 255, 0.4);
+            transform: translateX(5px);
+        }
+        
+        .btn.active {
+            background: rgba(41, 98, 255, 0.3);
+            border-color: #2962ff;
+            color: #bb86fc;
+            font-weight: 500;
+        }
+        
+        .btn i {
+            font-size: 18px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 25px 0;
+        }
+        
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .planning-area {
+            flex: 1;
+            padding: 25px;
+            background: rgba(25, 25, 35, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plan-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #bb86fc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .plan-title i {
+            color: #64b5f6;
+            font-size: 24px;
+        }
+        
+        .canvas {
+            background: rgba(20, 20, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(100, 181, 246, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(100, 181, 246, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 1;
+        }
+        
+        .element {
+            position: absolute;
+            border: 2px solid #2962ff;
+            background-color: rgba(41, 98, 255, 0.15);
+            cursor: move;
+            z-index: 2;
+            transition: all 0.2s;
+        }
+        
+        .element.wall {
+            height: 15px;
+            background-color: rgba(41, 98, 255, 0.3);
+        }
+        
+        .element.furniture {
+            border-radius: 8px;
+            background-color: rgba(187, 134, 252, 0.2);
+            border-color: #bb86fc;
+        }
+        
+        .element.equipment {
+            border-radius: 8px;
+            background-color: rgba(77, 208, 225, 0.2);
+            border-color: #4dd0e1;
+        }
+        
+        .element.selected {
+            border-color: #ffd54f;
+            box-shadow: 0 0 15px rgba(255, 213, 79, 0.5);
+            z-index: 10;
+        }
+        
+        .element-label {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 10px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 3px;
+            pointer-events: none;
+        }
+        
+        .properties {
+            padding: 20px;
+            background: rgba(30, 30, 40, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .props-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .props-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #bb86fc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .save-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #2962ff, #1a237e);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .save-btn:hover {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
+        }
+        
+        .save-btn.saved {
+            background: linear-gradient(135deg, #00c853, #1b5e20);
+        }
+        
+        .props-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #90a4ae;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #2962ff;
+            box-shadow: 0 0 0 2px rgba(41, 98, 255, 0.3);
+        }
+        
+        .visualization {
+            width: 350px;
+            background: rgba(30, 30, 40, 0.7);
+            padding: 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vis-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #bb86fc;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #render-container {
+            flex: 1;
+            background: rgba(10, 10, 20, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .stat-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #4dd0e1;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #00c853, #1b5e20);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #ff5252, #b71c1c);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: linear-gradient(135deg, #2c3e50, #1a237e);
+            border-radius: 12px;
+            padding: 30px;
+            width: 450px;
+            max-width: 90%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #bb86fc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .modal-content {
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        .modal-btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .modal-btn.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+        
+        .modal-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #2962ff, #1a237e);
+            color: white;
+        }
+        
+        .modal-btn.confirm:hover {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+        }
+        
+        .project-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: #bb86fc;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .project-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #90a4ae;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: #4dd0e1;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .export-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: rgba(41, 98, 255, 0.2);
+            border-color: rgba(41, 98, 255, 0.4);
+            transform: translateY(-3px);
+        }
+        
+        .export-btn i {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 10px;
+            color: #64b5f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-drafting-compass"></i> Профессиональный планировщик помещений</h1>
+            <div class="header-controls">
+                <button class="header-btn" id="help-btn"><i class="fas fa-question-circle"></i> Помощь</button>
+                <button class="header-btn" id="export-all-btn"><i class="fas fa-file-export"></i> Экспорт проекта</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="sidebar">
+                <div class="project-name">
+                    <i class="fas fa-project-diagram"></i>
+                    <span id="project-name">Мой новый проект</span>
+                </div>
+                
+                <div class="project-info">
+                    <div class="info-item">
+                        <div class="info-label">Дата создания</div>
+                        <div class="info-value" id="project-date">30.05.2023</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Статус</div>
+                        <div class="info-value" id="project-status">Черновик</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-folder"></i> Управление проектом</div>
+                    <button class="btn active" id="new-project-btn"><i class="fas fa-plus-circle"></i> Новый проект</button>
+                    <button class="btn" id="save-project-btn"><i class="fas fa-save"></i> Сохранить проект</button>
+                    <button class="btn" id="load-project-btn"><i class="fas fa-folder-open"></i> Загрузить проект</button>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-tools"></i> Инструменты</div>
+                    <button class="btn" id="add-wall-btn"><i class="fas fa-grip-lines"></i> Добавить стену</button>
+                    <button class="btn" id="add-furniture-btn"><i class="fas fa-couch"></i> Добавить мебель</button>
+                    <button class="btn" id="add-equipment-btn"><i class="fas fa-plug"></i> Добавить оборудование</button>
+                    <button class="btn" id="delete-element-btn"><i class="fas fa-trash-alt"></i> Удалить элемент</button>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-chart-bar"></i> Статистика</div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span>Общая площадь:</span>
+                            <span class="stat-value" id="total-area">0 м²</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Стены:</span>
+                            <span class="stat-value" id="walls-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Мебель:</span>
+                            <span class="stat-value" id="furniture-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Оборудование:</span>
+                            <span class="stat-value" id="equipment-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Общая стоимость:</span>
+                            <span class="stat-value" id="total-cost">0 ₽</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-area">
+                <div class="planning-area">
+                    <div class="plan-title"><i class="fas fa-ruler-combined"></i> Планировка помещения</div>
+                    
+                    <div class="canvas" id="design-canvas">
+                        <div class="grid-lines"></div>
+                        <!-- Элементы будут добавляться здесь динамически -->
+                    </div>
+                </div>
+                
+                <div class="properties">
+                    <div class="props-header">
+                        <div class="props-title" id="props-title"><i class="fas fa-sliders-h"></i> Свойства элемента</div>
+                        <button class="save-btn" id="save-props-btn"><i class="fas fa-save"></i> Сохранить</button>
+                    </div>
+                    
+                    <div class="props-form" id="props-form">
+                        <div class="form-group">
+                            <label for="element-type">Тип элемента</label>
+                            <select id="element-type">
+                                <option value="wall">Стена</option>
+                                <option value="furniture">Мебель</option>
+                                <option value="equipment">Оборудование</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="element-name">Название</label>
+                            <input type="text" id="element-name" placeholder="Введите название">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="width">Ширина (см)</label>
+                            <input type="number" id="width" min="1" value="100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="height">Высота (см)</label>
+                            <input type="number" id="height" min="1" value="50">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="category">Категория</label>
+                            <select id="category">
+                                <option value="living">Гостиная</option>
+                                <option value="bedroom">Спальня</option>
+                                <option value="office">Офисная</option>
+                                <option value="kitchen">Кухонная</option>
+                                <option value="bathroom">Ванная</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="material">Материал</label>
+                            <input type="text" id="material" placeholder="Введите материал">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cost">Стоимость (₽)</label>
+                            <input type="number" id="cost" min="0" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="position-x">Позиция X</label>
+                            <input type="number" id="position-x" min="0" value="50">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="position-y">Позиция Y</label>
+                            <input type="number" id="position-y" min="0" value="50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <div class="vis-title"><i class="fas fa-cube"></i> 3D Визуализация</div>
+                <div id="render-container">
+                    <!-- Three.js canvas будет вставлен сюда -->
+                </div>
+                
+                <div class="export-options">
+                    <div class="export-btn" id="export-pdf-btn">
+                        <i class="fas fa-file-pdf"></i>
+                        Экспорт в PDF
+                    </div>
+                    <div class="export-btn" id="export-image-btn">
+                        <i class="fas fa-image"></i>
+                        Экспорт в PNG
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-text">Проект успешно сохранен</span>
+    </div>
+    
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal">
+            <div class="modal-title"><i class="fas fa-exclamation-triangle"></i> Подтверждение действия</div>
+            <div class="modal-content" id="modal-message">
+                Вы уверены, что хотите удалить этот элемент? Это действие нельзя отменить.
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="modal-cancel">Отмена</button>
+                <button class="modal-btn confirm" id="modal-confirm">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Состояние приложения
+        const state = {
+            currentProject: {
+                name: "Мой новый проект",
+                elements: [],
+                createdAt: new Date(),
+                status: "draft"
+            },
+            selectedElement: null,
+            mode: 'select',
+            nextId: 1,
+            isDragging: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            tempWall: null
+        };
+        
+        // DOM элементы
+        const canvas = document.getElementById('design-canvas');
+        const projectName = document.getElementById('project-name');
+        const projectDate = document.getElementById('project-date');
+        const projectStatus = document.getElementById('project-status');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+        const confirmModal = document.getElementById('confirm-modal');
+        const modalMessage = document.getElementById('modal-message');
+        
+        // Статистические элементы
+        const totalAreaEl = document.getElementById('total-area');
+        const wallsCountEl = document.getElementById('walls-count');
+        const furnitureCountEl = document.getElementById('furniture-count');
+        const equipmentCountEl = document.getElementById('equipment-count');
+        const totalCostEl = document.getElementById('total-cost');
+        
+        // Three.js переменные
+        let scene, camera, renderer, controls;
+        
+        // Инициализация приложения
+        function initApp() {
+            // Установка информации о проекте
+            updateProjectInfo();
+            
+            // Инициализация 3D визуализации
+            init3DView();
+            
+            // Обработчики кнопок
+            document.getElementById('new-project-btn').addEventListener('click', createNewProject);
+            document.getElementById('save-project-btn').addEventListener('click', saveProject);
+            document.getElementById('load-project-btn').addEventListener('click', loadProject);
+            document.getElementById('add-wall-btn').addEventListener('click', () => setMode('wall'));
+            document.getElementById('add-furniture-btn').addEventListener('click', () => setMode('furniture'));
+            document.getElementById('add-equipment-btn').addEventListener('click', () => setMode('equipment'));
+            document.getElementById('delete-element-btn').addEventListener('click', () => setMode('delete'));
+            document.getElementById('save-props-btn').addEventListener('click', saveElementProperties);
+            document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
+            document.getElementById('export-image-btn').addEventListener('click', exportToImage);
+            document.getElementById('export-all-btn').addEventListener('click', exportProject);
+            document.getElementById('help-btn').addEventListener('click', showHelp);
+            
+            // Обработчики модального окна
+            document.getElementById('modal-cancel').addEventListener('click', () => {
+                confirmModal.classList.remove('active');
+            });
+            
+            document.getElementById('modal-confirm').addEventListener('click', confirmDelete);
+            
+            // Обработчик клика на холст
+            canvas.addEventListener('click', handleCanvasClick);
+            
+            // Обработчики для перетаскивания
+            canvas.addEventListener('mousedown', startDrag);
+            canvas.addEventListener('mousemove', handleDrag);
+            canvas.addEventListener('mouseup', endDrag);
+            canvas.addEventListener('mouseleave', endDrag);
+            
+            // Добавление начальных элементов для демонстрации
+            addWall(50, 50, 300, 15, "Внешняя стена");
+            addWall(50, 50, 15, 250, "Внешняя стена");
+            addWall(350, 50, 15, 250, "Внешняя стена");
+            addWall(50, 300, 315, 15, "Внешняя стена");
+            
+            addFurniture(100, 100, 80, 150, "Диван");
+            addFurniture(200, 100, 60, 100, "Стол");
+            addEquipment(280, 200, 50, 50, "Телевизор");
+            
+            // Обновление статистики
+            updateStats();
+        }
+        
+        // Инициализация 3D визуализации
+        function init3DView() {
+            const container = document.getElementById('render-container');
+            
+            // Создание сцены
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0c0c1a);
+            
+            // Создание камеры
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            // Создание рендерера
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            // Добавление освещения
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Создание сетки
+            const gridHelper = new THREE.GridHelper(10, 10, 0x444466, 0x222244);
+            scene.add(gridHelper);
+            
+            // Создание осей
+            const axesHelper = new THREE.AxesHelper(3);
+            scene.add(axesHelper);
+            
+            // Анимация
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Обработка изменения размера
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+        
+        // Обновление 3D визуализации
+        function update3DView() {
+            // Очистка сцены от предыдущих элементов
+            while(scene.children.length > 2) { 
+                scene.remove(scene.children[2]); 
+            }
+            
+            // Добавление элементов в 3D сцену
+            state.currentProject.elements.forEach(element => {
+                let geometry, material, mesh;
+                
+                if (element.type === 'wall') {
+                    geometry = new THREE.BoxGeometry(element.dimensions.width / 50, 0.1, element.dimensions.height / 50);
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0x2962ff,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                } else if (element.type === 'furniture') {
+                    geometry = new THREE.BoxGeometry(element.dimensions.width / 50, element.dimensions.height / 100, element.dimensions.width / 50);
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0xbb86fc,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                } else {
+                    geometry = new THREE.CylinderGeometry(element.dimensions.width / 70, element.dimensions.width / 70, element.dimensions.height / 70, 16);
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0x4dd0e1,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                }
+                
+                mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(
+                    (element.position.x - 200) / 100, 
+                    element.type === 'wall' ? 0 : element.dimensions.height / 200, 
+                    (element.position.y - 200) / 100
+                );
+                
+                scene.add(mesh);
+            });
+        }
+        
+        // Создание нового проекта
+        function createNewProject() {
+            showNotification("Создан новый проект");
+            state.currentProject = {
+                name: "Мой новый проект",
+                elements: [],
+                createdAt: new Date(),
+                status: "draft"
+            };
+            state.selectedElement = null;
+            state.nextId = 1;
+            renderElements();
+            resetForm();
+            updateProjectInfo();
+            updateStats();
+            update3DView();
+        }
+        
+        // Сохранение проекта
+        function saveProject() {
+            try {
+                // Сохранение в localStorage
+                localStorage.setItem('roomPlannerProject', JSON.stringify({
+                    ...state.currentProject,
+                    createdAt: state.currentProject.createdAt.toISOString()
+                }));
+                
+                state.currentProject.status = "saved";
+                updateProjectInfo();
+                showNotification("Проект успешно сохранен");
+            } catch (e) {
+                showNotification("Ошибка при сохранении проекта", true);
+            }
+        }
+        
+        // Загрузка проекта
+        function loadProject() {
+            try {
+                const saved = localStorage.getItem('roomPlannerProject');
+                if (saved) {
+                    const project = JSON.parse(saved);
+                    project.createdAt = new Date(project.createdAt);
+                    state.currentProject = project;
+                    
+                    // Восстановление nextId
+                    let maxId = 0;
+                    state.currentProject.elements.forEach(el => {
+                        if (el.id > maxId) maxId = el.id;
+                    });
+                    state.nextId = maxId + 1;
+                    
+                    renderElements();
+                    resetForm();
+                    updateProjectInfo();
+                    updateStats();
+                    update3DView();
+                    showNotification("Проект успешно загружен");
+                } else {
+                    showNotification("Сохранённые проекты не найдены", true);
+                }
+            } catch (e) {
+                showNotification("Ошибка при загрузке проекта", true);
+            }
+        }
+        
+        // Обновление информации о проекте
+        function updateProjectInfo() {
+            projectName.textContent = state.currentProject.name;
+            projectDate.textContent = state.currentProject.createdAt.toLocaleDateString();
+            projectStatus.textContent = state.currentProject.status === "draft" ? "Черновик" : "Сохранён";
+        }
+        
+        // Установка режима работы
+        function setMode(mode) {
+            state.mode = mode;
+            
+            // Обновление активной кнопки
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            
+            switch(mode) {
+                case 'wall':
+                    document.getElementById('add-wall-btn').classList.add('active');
+                    break;
+                case 'furniture':
+                    document.getElementById('add-furniture-btn').classList.add('active');
+                    break;
+                case 'equipment':
+                    document.getElementById('add-equipment-btn').classList.add('active');
+                    break;
+                case 'delete':
+                    document.getElementById('delete-element-btn').classList.add('active');
+                    break;
+            }
+        }
+        
+        // Обработка клика на холст
+        function handleCanvasClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            switch(state.mode) {
+                case 'wall':
+                    if (!state.tempWall) {
+                        state.tempWall = {
+                            startX: x,
+                            startY: y
+                        };
+                    } else {
+                        const endX = x;
+                        const endY = y;
+                        const width = Math.abs(endX - state.tempWall.startX);
+                        const height = Math.abs(endY - state.tempWall.startY);
+                        
+                        // Определение направления стены
+                        if (width > height) {
+                            // Горизонтальная стена
+                            addWall(
+                                Math.min(state.tempWall.startX, endX), 
+                                state.tempWall.startY, 
+                                width, 
+                                15,
+                                "Стена"
+                            );
+                        } else {
+                            // Вертикальная стена
+                            addWall(
+                                state.tempWall.startX, 
+                                Math.min(state.tempWall.startY, endY), 
+                                15, 
+                                height,
+                                "Стена"
+                            );
+                        }
+                        
+                        state.tempWall = null;
+                    }
+                    break;
+                case 'furniture':
+                    addFurniture(x, y, 80, 50, "Новая мебель");
+                    break;
+                case 'equipment':
+                    addEquipment(x, y, 50, 50, "Новое оборудование");
+                    break;
+                case 'delete':
+                    // Поиск элемента по координатам
+                    const element = findElementAt(x, y);
+                    if (element) {
+                        showDeleteConfirmation(element);
+                    }
+                    break;
+                case 'select':
+                    // Выбор элемента
+                    const selected = findElementAt(x, y);
+                    if (selected) {
+                        selectElement(selected);
+                    } else {
+                        state.selectedElement = null;
+                        resetForm();
+                    }
+                    break;
+            }
+        }
+        
+        // Начало перетаскивания
+        function startDrag(e) {
+            if (state.mode !== 'select') return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const element = findElementAt(x, y);
+            if (element) {
+                state.isDragging = true;
+                state.selectedElement = element;
+                state.dragStartX = x - element.position.x;
+                state.dragStartY = y - element.position.y;
+                selectElement(element);
+            }
+        }
+        
+        // Обработка перетаскивания
+        function handleDrag(e) {
+            if (!state.isDragging || !state.selectedElement) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            state.selectedElement.position.x = x - state.dragStartX;
+            state.selectedElement.position.y = y - state.dragStartY;
+            
+            // Обновление формы
+            fillForm(state.selectedElement);
+            renderElements();
+        }
+        
+        // Завершение перетаскивания
+        function endDrag() {
+            state.isDragging = false;
+        }
+        
+        // Добавление стены
+        function addWall(x, y, width, height, name = "Стена") {
+            const wall = {
+                id: state.nextId++,
+                type: 'wall',
+                name,
+                position: { x, y },
+                dimensions: { width, height },
+                material: 'Бетон',
+                cost: Math.round(width * 0.1 * 100) / 100,
+                category: 'wall'
+            };
+            
+            state.currentProject.elements.push(wall);
+            renderElements();
+            selectElement(wall);
+            updateStats();
+            update3DView();
+        }
+        
+        // Добавление мебели
+        function addFurniture(x, y, width, height, name = "Мебель") {
+            const furniture = {
+                id: state.nextId++,
+                type: 'furniture',
+                name,
+                position: { x, y },
+                dimensions: { width, height },
+                material: 'Дерево',
+                cost: Math.round(width * height * 0.05),
+                category: 'office'
+            };
+            
+            state.currentProject.elements.push(furniture);
+            renderElements();
+            selectElement(furniture);
+            updateStats();
+            update3DView();
+        }
+        
+        // Добавление оборудования
+        function addEquipment(x, y, width, height, name = "Оборудование") {
+            const equipment = {
+                id: state.nextId++,
+                type: 'equipment',
+                name,
+                position: { x, y },
+                dimensions: { width, height },
+                material: 'Металл',
+                cost: Math.round(width * height * 0.1),
+                category: 'tech'
+            };
+            
+            state.currentProject.elements.push(equipment);
+            renderElements();
+            selectElement(equipment);
+            updateStats();
+            update3DView();
+        }
+        
+        // Поиск элемента по координатам
+        function findElementAt(x, y) {
+            for (let i = state.currentProject.elements.length - 1; i >= 0; i--) {
+                const element = state.currentProject.elements[i];
+                const { position, dimensions } = element;
+                if (x >= position.x && x <= position.x + dimensions.width &&
+                    y >= position.y && y <= position.y + dimensions.height) {
+                    return element;
+                }
+            }
+            return null;
+        }
+        
+        // Выбор элемента
+        function selectElement(element) {
+            state.selectedElement = element;
+            renderElements();
+            fillForm(element);
+        }
+        
+        // Заполнение формы данными элемента
+        function fillForm(element) {
+            document.getElementById('element-type').value = element.type;
+            document.getElementById('element-name').value = element.name;
+            document.getElementById('width').value = element.dimensions.width;
+            document.getElementById('height').value = element.dimensions.height;
+            document.getElementById('category').value = element.category;
+            document.getElementById('material').value = element.material;
+            document.getElementById('cost').value = element.cost;
+            document.getElementById('position-x').value = element.position.x;
+            document.getElementById('position-y').value = element.position.y;
+            
+            propsTitle.innerHTML = `<i class="fas fa-sliders-h"></i> Свойства элемента (${element.name})`;
+        }
+        
+        // Сброс формы
+        function resetForm() {
+            document.getElementById('element-type').value = 'wall';
+            document.getElementById('element-name').value = '';
+            document.getElementById('width').value = '100';
+            document.getElementById('height').value = '50';
+            document.getElementById('category').value = 'office';
+            document.getElementById('material').value = '';
+            document.getElementById('cost').value = '0';
+            document.getElementById('position-x').value = '50';
+            document.getElementById('position-y').value = '50';
+            
+            propsTitle.innerHTML = `<i class="fas fa-sliders-h"></i> Свойства элемента`;
+        }
+        
+        // Сохранение свойств элемента
+        function saveElementProperties() {
+            if (!state.selectedElement) return;
+            
+            const element = state.selectedElement;
+            element.name = document.getElementById('element-name').value;
+            element.dimensions.width = parseInt(document.getElementById('width').value);
+            element.dimensions.height = parseInt(document.getElementById('height').value);
+            element.category = document.getElementById('category').value;
+            element.material = document.getElementById('material').value;
+            element.cost = parseFloat(document.getElementById('cost').value);
+            element.position.x = parseInt(document.getElementById('position-x').value);
+            element.position.y = parseInt(document.getElementById('position-y').value);
+            
+            // Анимация кнопки сохранения
+            const saveBtn = document.getElementById('save-props-btn');
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> Сохранено!';
+            saveBtn.classList.add('saved');
+            
+            setTimeout(() => {
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Сохранить';
+                saveBtn.classList.remove('saved');
+            }, 2000);
+            
+            renderElements();
+            updateStats();
+            update3DView();
+        }
+        
+        // Показать подтверждение удаления
+        function showDeleteConfirmation(element) {
+            modalMessage.textContent = `Вы уверены, что хотите удалить "${element.name}"?`;
+            state.selectedElement = element;
+            confirmModal.classList.add('active');
+        }
+        
+        // Подтверждение удаления
+        function confirmDelete() {
+            if (state.selectedElement) {
+                const index = state.currentProject.elements.findIndex(el => el.id === state.selectedElement.id);
+                if (index !== -1) {
+                    state.currentProject.elements.splice(index, 1);
+                    renderElements();
+                    resetForm();
+                    state.selectedElement = null;
+                    updateStats();
+                    update3DView();
+                    showNotification("Элемент удален");
+                }
+            }
+            confirmModal.classList.remove('active');
+        }
+        
+        // Обновление статистики
+        function updateStats() {
+            const walls = state.currentProject.elements.filter(el => el.type === 'wall');
+            const furniture = state.currentProject.elements.filter(el => el.type === 'furniture');
+            const equipment = state.currentProject.elements.filter(el => el.type === 'equipment');
+            
+            // Расчет площади (упрощенный)
+            const area = Math.round(walls.reduce((sum, wall) => sum + wall.dimensions.width * 0.01, 0) * 100) / 100;
+            
+            // Расчет стоимости
+            const cost = state.currentProject.elements.reduce((sum, el) => sum + el.cost, 0);
+            
+            wallsCountEl.textContent = walls.length;
+            furnitureCountEl.textContent = furniture.length;
+            equipmentCountEl.textContent = equipment.length;
+            totalAreaEl.textContent = `${area} м²`;
+            totalCostEl.textContent = `${cost.toLocaleString('ru-RU')} ₽`;
+        }
+        
+        // Отрисовка элементов
+        function renderElements() {
+            // Очистка холста
+            const elements = canvas.querySelectorAll('.element');
+            elements.forEach(el => el.remove());
+            
+            // Отрисовка всех элементов
+            state.currentProject.elements.forEach(element => {
+                const elDiv = document.createElement('div');
+                elDiv.className = `element ${element.type}`;
+                elDiv.style.left = `${element.position.x}px`;
+                elDiv.style.top = `${element.position.y}px`;
+                elDiv.style.width = `${element.dimensions.width}px`;
+                elDiv.style.height = `${element.dimensions.height}px`;
+                
+                if (state.selectedElement && state.selectedElement.id === element.id) {
+                    elDiv.classList.add('selected');
+                }
+                
+                // Добавление названия элемента
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'element-label';
+                nameSpan.textContent = element.name;
+                elDiv.appendChild(nameSpan);
+                
+                canvas.appendChild(elDiv);
+                
+                // Обработчик выбора элемента
+                elDiv.addEventListener('click', () => {
+                    selectElement(element);
+                    setMode('select');
+                });
+            });
+        }
+        
+        // Показать уведомление
+        function showNotification(message, isError = false) {
+            notificationText.textContent = message;
+            notification.classList.remove('error');
+            
+            if (isError) {
+                notification.classList.add('error');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Экспорт в PDF
+        function exportToPDF() {
+            showNotification("PDF экспортирован");
+            // В реальном приложении здесь была бы генерация PDF
+        }
+        
+        // Экспорт в изображение
+        function exportToImage() {
+            html2canvas(canvas).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'plan.png';
+                link.click();
+                showNotification("Изображение экспортировано");
+            });
+        }
+        
+        // Экспорт всего проекта
+        function exportProject() {
+            const dataStr = JSON.stringify(state.currentProject, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const link = document.createElement('a');
+            link.setAttribute('href', dataUri);
+            link.setAttribute('download', 'project.json');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification("Проект экспортирован");
+        }
+        
+        // Показать справку
+        function showHelp() {
+            modalMessage.innerHTML = `
+                <p><strong>Инструкция по использованию:</strong></p>
+                <ol>
+                    <li>Выберите инструмент из левой панели</li>
+                    <li>Кликните на холсте, чтобы добавить элемент</li>
+                    <li>Выделите элемент, чтобы изменить его свойства</li>
+                    <li>Используйте перетаскивание для перемещения элементов</li>
+                    <li>Сохраняйте проект регулярно</li>
+                    <li>Экспортируйте результаты в PNG или PDF</li>
+                </ol>
+                <p>Для стен: кликните для начала стены, затем кликните в другом месте для завершения.</p>
+            `;
+            confirmModal.classList.add('active');
+        }
+        
+        // Запуск приложения после загрузки страницы
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
